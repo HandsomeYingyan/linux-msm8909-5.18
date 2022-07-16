@@ -1,0 +1,274 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Copyright (c) 2022 Handsomehacker <handsomeyingyan@gmail.com>
+ */
+#include "qcom-msm8909.dtsi"
+#include "qcom-pm8909.dtsi"
+#include <dt-bindings/input/input.h>
+
+/ {
+	model = "Guangxin EF33";
+	compatible = "guangxin,ef33", "qcom,msm8909";
+	chassis-type = "handset";
+
+	aliases {
+		serial0 = &blsp_uart1;
+		spi0	= &blsp_spi6;
+	};
+
+	chosen {
+		stdout-path = "serial0";
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&gpio_keys_default>;
+
+		label = "GPIO Buttons";
+
+		volume-up {
+			label = "Volume Up";
+			gpios = <&tlmm 90 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_VOLUMEUP>;
+		};
+
+	};
+
+
+	matrix_keypad {
+		compatible = "gpio-matrix-keypad";
+		debounce-delay-ms = <10>;
+		col-scan-delay-us = <2>;
+		gpio-activehigh;
+		pinctrl-names = "matrix_keypad_gpios";
+		pinctrl-0 = <&matrix_keypad_gpios>;
+
+		row-gpios = <&tlmm 97 0
+			     &tlmm 38 0
+			     &tlmm 36 0
+			     &tlmm 110 0
+			     &tlmm 98 0>;
+
+		col-gpios = <&tlmm 32 0
+			     &tlmm 16 0
+			     &tlmm 15 0
+			     &tlmm 22 0
+			     &tlmm 14 0>;
+
+		linux,keymap = <
+				MATRIX_KEY(1, 0, KEY_LEFTSHIFT) /* # */
+				MATRIX_KEY(1, 1, KEY_9) /* 9 */
+				MATRIX_KEY(1, 2, KEY_6) /* 6 */
+				MATRIX_KEY(1, 3, KEY_3) /* 3 */
+				MATRIX_KEY(1, 4, KEY_ENTER) /* OK */
+				MATRIX_KEY(2, 0, KEY_0) /* 0 */
+				MATRIX_KEY(2, 1, KEY_8) /* 8 */
+				MATRIX_KEY(2, 2, KEY_5) /* 5 */
+				MATRIX_KEY(2, 3, KEY_2) /* 2 */
+				MATRIX_KEY(2, 4, KEY_PICKUP_PHONE) /* PICKUP */
+				MATRIX_KEY(3, 0, KEY_LEFTCTRL) /* * */
+				MATRIX_KEY(3, 1, KEY_7) /* 7 */
+				MATRIX_KEY(3, 2, KEY_4) /* 4 */
+				MATRIX_KEY(3, 3, KEY_1) /* 1 */
+				MATRIX_KEY(3, 4, KEY_BACK) /* BACK */
+				MATRIX_KEY(4, 0, KEY_ENTER) /* CENTER */
+				MATRIX_KEY(4, 1, KEY_DOWN) /* DOWN */
+				MATRIX_KEY(4, 2, KEY_LEFT) /* LEFT */
+				MATRIX_KEY(4, 3, KEY_UP) /* UP */
+				MATRIX_KEY(4, 4, KEY_RIGHT) /* RIGHT */
+				>;
+	};
+};
+
+&pm8909_resin {
+	status = "okay";
+	linux,code = <KEY_VOLUMEDOWN>;
+};
+
+&blsp_spi6 {
+		num-cs = <1>;
+		cs-select = <0>;
+		cs-gpios = <&tlmm 10 GPIO_ACTIVE_HIGH>;
+		status = "okay";
+		st7789v@0 {
+        	compatible = "panel-mipi-dbi-spi";
+			pinctrl-names = "default";
+			pinctrl-0 = <&st7789v_pins>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			reg = <0>;
+			spi-cpol;
+       		spi-cpha;
+        	rgb;
+			fps =<30>;
+       		spi-max-frequency = <50000000>;
+        	reset-gpios = <&tlmm 25 GPIO_ACTIVE_HIGH>;
+        	dc-gpios = <&tlmm 17 GPIO_ACTIVE_HIGH>;
+        	buswidth =<8>; 
+			power-supply = <&pm8909_l17>,<&pm8909_l2>;
+			timing: panel-timing {
+                        vactive = <320>;
+                        hactive = <240>;
+                        hback-porch = <0>;
+                        vback-porch = <0>;
+
+                        clock-frequency = <0>;
+                        hfront-porch = <0>;
+                        hsync-len = <0>;
+                        vfront-porch = <0>;
+                        vsync-len = <0>;
+           	};
+       };
+};
+
+
+&blsp_uart1 {
+	status = "okay";
+};
+
+&mpss {
+	status = "okay";
+	pll-supply = <&pm8909_l7>;
+};
+
+&pm8909_usbin {
+	status = "okay";
+};
+
+&sdhc_1 {
+	status = "okay";
+	vmmc-supply = <&pm8909_l8>;
+	vqmmc-supply = <&pm8909_l5>;
+};
+
+&usb {
+	status = "okay";
+	extcon = <&pm8909_usbin>;
+};
+
+&usb_hs_phy {
+	extcon = <&pm8909_usbin>;
+	v1p8-supply = <&pm8909_l7>;
+	v3p3-supply = <&pm8909_l13>;
+};
+
+&wcnss {
+	status = "okay";
+	vddpx-supply = <&pm8909_l7>;
+
+	iris {
+		vddxo-supply = <&pm8909_l7>;
+		vddrfa-supply = <&pm8909_l10>;
+		vddpa-supply = <&pm8909_l9>;
+		vdddig-supply = <&pm8909_l5>;
+	};
+};
+
+&tlmm {
+	st7789v_pins: st7789v_pins {
+		pins = "gpio25", "gpio17";
+		function = "gpio";
+
+		drive-strength = <2>;
+		bias-pull-up;
+	};
+
+	gpio_keys_default: gpio-keys-default {
+		pins = "gpio90";
+		function = "gpio";
+
+		drive-strength = <2>;
+		bias-pull-up;
+	};
+
+	matrix_keypad_gpios: matrix_keypad_gpios {
+		pins = "gpio97","gpio38","gpio36"
+			   , "gpio110","gpio98","gpio32"
+			   , "gpio16","gpio15","gpio22"
+			   , "gpio14";
+		function = "gpio";
+
+		drive-strength = <2>;
+		bias-pull-up;
+	};
+};
+
+&rpm_requests {
+	pm8909-regulators {
+		compatible = "qcom,rpm-pm8909-regulators";
+
+		/* pm8909_s1 is managed by rpmpd (MSM8909_VDDCX) */
+		pm8909_s2: s2 {
+			regulator-min-microvolt = <1850000>;
+			regulator-max-microvolt = <1850000>;
+		};
+
+		pm8909_l1: l1 {
+			regulator-min-microvolt = <1000000>;
+			regulator-max-microvolt = <1000000>;
+		};
+		pm8909_l2: l2 {
+			regulator-min-microvolt = <1200000>;
+			regulator-max-microvolt = <1200000>;
+		};
+		/* pm8909_l3 is managed by rpmpd (MSM8909_VDDMX) */
+		pm8909_l4: l4 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+		};
+		pm8909_l5: l5 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+		};
+		pm8909_l6: l6 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+		};
+		pm8909_l7: l7 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+		};
+		pm8909_l8: l8 {
+			regulator-min-microvolt = <2850000>;
+			regulator-max-microvolt = <2900000>;
+		};
+		pm8909_l9: l9 {
+			regulator-min-microvolt = <3000000>;
+			regulator-max-microvolt = <3300000>;
+		};
+		pm8909_l10: l10 {
+			regulator-min-microvolt = <1225000>;
+			regulator-max-microvolt = <1300000>;
+		};
+		pm8909_l11: l11 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <2950000>;
+		};
+		pm8909_l12: l12 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <2950000>;
+		};
+		pm8909_l13: l13 {
+			regulator-min-microvolt = <3075000>;
+			regulator-max-microvolt = <3075000>;
+		};
+		pm8909_l14: l14 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <3000000>;
+		};
+		pm8909_l15: l15 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <3000000>;
+		};
+		pm8909_l17: l17 {
+			regulator-min-microvolt = <2800000>;
+			regulator-max-microvolt = <2850000>;
+		};
+		pm8909_l18: l18 {
+			regulator-min-microvolt = <2700000>;
+			regulator-max-microvolt = <2700000>;
+		};
+	};
+};
